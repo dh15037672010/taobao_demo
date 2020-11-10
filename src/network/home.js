@@ -1,10 +1,38 @@
-import {request} from './request'
+import {request} from "./request";
 
-
-//对应首页的其中一个请求。将url请求从home中剥离出来在这里集中管理。
 export function getHomeMultidata() {
   return request({
-    url:'/home/multidata',
+    url: '/home/multidata'
   })
 }
 
+export function getHomeGoods(type, page) {
+  return request({
+    url: '/home/data',
+    params: {
+      type,
+      page
+    }
+  })
+}
+
+// 函数调用 -> 压入函数栈(保存函数调用过程中所有变量)
+// 函数调用结束 -> 弹出函数栈(释放函数所有的变量)
+// function test() {
+//   const names = ['why', 'aaa']
+// }
+//
+// test()
+//
+// test()
+
+let totalNums = []
+
+const nums1 = [20, 11, 222]
+const nums2 = [111, 22, 333]
+
+// for (let n of nums1) {
+//   totalNums.push(n)
+// }
+
+totalNums.push(...nums1)

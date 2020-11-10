@@ -27,7 +27,7 @@
       },
       moveRatio: {
         type: Number,
-        default: 0.25   //拨动1/4即可滚到下张图
+        default: 0.25
       },
       showIndicator: {
         type: Boolean,
@@ -50,7 +50,7 @@
 
         // 2.开启定时器
         this.startTimer();
-      }, 100)
+      }, 3000)
     },
     methods: {
 		  /**

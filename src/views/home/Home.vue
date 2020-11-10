@@ -1,146 +1,163 @@
 <template>
-  <div id="home">
-    <nav-bar class="home-nav-bar">
-      <div slot="center">购物街</div>
-    </nav-bar>
-<!-- ref 是用于定位元素和取到组件的内容，:是绑定属性 @是绑定方法-->
-    <scroller class="home-scroller" ref="scroller" :probe-type="3" @scroll="getPostion">
-      <home-swiper :cbanners="banners"/>
-      <home-recommend :cproducts="products"/>
-      <home-feature-view/>
-      <tab-control class="home-tab-control" :ctitles="['流行', '新款', '精选']" @tabClick="pTabClick"/>
-      <goods-list :cgoods="showGoods"/>
-    </scroller>
-
-    <back-top @click.native="backTopClick" v-show="isShowBackTop" />
+  <div id="home" class="wrapper">
+    <nav-bar class="home-nav"><div slot="center">购物街</div></nav-bar>
+    <scroll class="content"
+            ref="scroll"
+            :probe-type="3"
+            @scroll="contentScroll"
+            :pull-up-load="true"
+            @pullingUp="loadMore">
+      <home-swiper :banners="banners"/>
+      <recommend-view :recommends="recommends"/>
+      <feature-view/>
+      <tab-control class="tab-control"
+                   :titles="['流行', '新款', '精选']"
+                   @tabClick="tabClick"/>
+      <good-list :goods="showGoods"/>
+    </scroll>
+    <div>呵呵呵呵</div>
+    <back-top @click.native="backClick" v-show="isShowBackTop"/>
   </div>
 </template>
 
 <script>
-    import NavBar from 'components/common/navbar/NavBar'
-    import HomeSwiper from "./childComps/HomeSwiper";
-    import HomeRecommend from "./childComps/HomeRecommend";
-    import HomeFeatureView from "./childComps/HomeFeatureView";
-    import TabControl from "components/contents/tabControl/TabControl";
-    import GoodsList from "components/contents/good/GoodsList";
-    import Scroller from "components/common/scroller/Scroller";
-    import BackTop from "components/contents/backTop/BackTop";
-    import {Swiper,SwiperItem} from 'components/common/swiper'
-    import {getHomeMultiData, getGoodsData} from "network/home";
+  import HomeSwiper from './childComps/HomeSwiper'
+  import RecommendView from './childComps/RecommendView'
+  import FeatureView from './childComps/FeatureView'
 
-    export default {
-        name: "Home",
-        components:{
-            NavBar,
-            HomeSwiper,
-            HomeRecommend,
-            HomeFeatureView,
-            TabControl,
-            GoodsList,
-            Scroller,
-            BackTop,
-            Swiper,
-            SwiperItem
-        },
-        data() {
-          return {
-            banners: [],
-            products: [],
-            goods:{
-              pop:{page:0, list:[]},
-              new:{page:0, list:[]},
-              sell:{page:0, list:[]}
-            },
-            currentType:'pop',
-            isShowBackTop: false
-          }
-        },
-        computed: {
-            showGoods() {
-                return this.goods[this.currentType].list
-            }
-        },
-        created() {
-            this.getHomeData()
+  import NavBar from 'components/common/navbar/NavBar'
+  import TabControl from 'components/content/tabControl/TabControl'
+  import GoodList from 'components/content/goods/GoodsList'
+  import Scroll from 'components/common/scroll/Scroll'
+  import BackTop from 'components/content/backTop/BackTop'
 
-            this.getHomeGoodsData('pop')
-            this.getHomeGoodsData('new')
-            this.getHomeGoodsData('sell')
+  import { getHomeMultidata, getHomeGoods } from "network/home"
+
+  export default {
+    name: "Home",
+    components: {
+      HomeSwiper,
+      RecommendView,
+      FeatureView,
+      NavBar,
+      TabControl,
+      GoodList,
+      Scroll,
+      BackTop
+    },
+    data() {
+      return {
+        banners: [],
+        recommends: [],
+        goods: {
+          'pop': {page: 0, list: []},
+          'new': {page: 0, list: []},
+          'sell': {page: 0, list: []},
         },
-        methods:{
-            pTabClick(index) {
-                switch (index) {
-                  case 0:
-                      this.currentType = 'pop'
-                      break
-                  case 1:
-                      this.currentType = 'new'
-                      break
-                  case 2:
-                      this.currentType = 'sell'
-                      break
-              }
-            },
-            getHomeData() {
-                getHomeMultiData().then(res => {
-                    this.banners = res.data.banners
-                    this.products = res.data.products
-                })
-            },
-            getHomeGoodsData(type) {
-                let page = this.goods[type].page + 1
-                getGoodsData(type, page).then(res => {
-                    this.goods[type].list.push(...res.goods)
-                    this.goods[type].page = res.page
-                })
-            },
-            backTopClick() {
-                // 通过$refs拿到组件中的对象
-                this.$refs.scroller.scrollTo(0, 0, 500)
-            },
-            getPostion(postion) {
-                this.isShowBackTop = -postion.y > 300
-            }
+        currentType: 'pop',
+        isShowBackTop: false
+      }
+    },
+    computed: {
+      showGoods() {
+        return this.goods[this.currentType].list
+      }
+    },
+    created() {
+      // 1.请求多个数据
+      this.getHomeMultidata()
+
+      // 2.请求商品数据
+      this.getHomeGoods('pop')
+      this.getHomeGoods('new')
+      this.getHomeGoods('sell')
+    },
+    methods: {
+      /**
+       * 事件监听相关的方法
+       */
+      tabClick(index) {
+        switch (index) {
+          case 0:
+            this.currentType = 'pop'
+            break
+          case 1:
+            this.currentType = 'new'
+            break
+          case 2:
+            this.currentType = 'sell'
+            break
         }
+      },
+      backClick() {
+        this.$refs.scroll.scrollTo(0, 0)
+      },
+      contentScroll(position) {
+        this.isShowBackTop = (-position.y) > 1000
+      },
+      loadMore() {
+        this.getHomeGoods(this.currentType)
+      },
+      /**
+       * 网络请求相关的方法
+       */
+      getHomeMultidata() {
+        getHomeMultidata().then(res => {
+          // this.result = res;
+          this.banners = res.data.banner.list;
+          this.recommends = res.data.recommend.list;
+        })
+      },
+      getHomeGoods(type) {
+        const page = this.goods[type].page + 1
+        getHomeGoods(type, page).then(res => {
+          this.goods[type].list.push(...res.data.list)
+          this.goods[type].page += 1
+
+          this.$refs.scroll.finishPullUp()
+        })
+      }
     }
+  }
 </script>
 
 <style scoped>
   #home {
-    padding-top: 44px;
+    /*padding-top: 44px;*/
     height: 100vh;
     position: relative;
   }
 
-  .home-nav-bar {
+  .home-nav {
     background-color: var(--color-tint);
-    color:#fff;
+    color: #fff;
 
     position: fixed;
     left: 0;
-    right:0;
+    right: 0;
     top: 0;
     z-index: 9;
-
   }
 
-  .home-tab-control{
-    /*两个要混合使用*/
+  .tab-control {
     position: sticky;
-    top: 43px;/*顶部navbar的高度*/
+    top: 44px;
     z-index: 9;
   }
 
-  .home-scroller{
-    /*height:300px;*/
+  .content {
     overflow: hidden;
+
     position: absolute;
     top: 44px;
     bottom: 49px;
-    right: 0;
     left: 0;
+    right: 0;
   }
 
-
-
+  /*.content {*/
+    /*height: calc(100% - 93px);*/
+    /*overflow: hidden;*/
+    /*margin-top: 44px;*/
+  /*}*/
 </style>

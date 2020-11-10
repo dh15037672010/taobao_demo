@@ -3,6 +3,7 @@
     <div class="home-recommend-item" v-for="item in filterT4(cproducts)" :key="item.url">
       <a :href="item.url">
         <img :src="item.image" alt="">
+        <p>{{item.title}}</p>
       </a>
     </div>
   </div>
